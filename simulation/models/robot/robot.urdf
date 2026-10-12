@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<!--
+  Differential drive race robot with a forward camera.
+  Fits the 12 x 12 x 12 in (0.3048 m) start cube.
+  Frames: base_link sits at wheel axle height.
+-->
+<robot name="race_robot">
+
+  <!-- ===== Materials ===== -->
+  <material name="blue"><color rgba="0.1 0.3 0.8 1"/></material>
+  <material name="black"><color rgba="0.05 0.05 0.05 1"/></material>
+  <material name="grey"><color rgba="0.6 0.6 0.6 1"/></material>
+
+  <!-- ===== Chassis ===== -->
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0.02"/>
+      <geometry><box size="0.22 0.18 0.06"/></geometry>
+      <material name="blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.02"/>
+      <geometry><box size="0.22 0.18 0.06"/></geometry>
+    </collision>
+    <inertial>
+      <origin xyz="0 0 0.02"/>
+      <mass value="1.5"/>
+      <inertia ixx="0.0045" ixy="0" ixz="0" iyy="0.0065" iyz="0" izz="0.0101"/>
+    </inertial>
+  </link>
+
+  <!-- ===== Drive wheels (rear) ===== -->
+  <link name="left_wheel_link">
+    <visual>
+      <origin rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.035" length="0.025"/></geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.035" length="0.025"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="3.6e-5" ixy="0" ixz="0" iyy="6.1e-5" iyz="0" izz="3.6e-5"/>
+    </inertial>
+  </link>
+
+  <joint name="left_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="left_wheel_link"/>
+    <origin xyz="-0.06 0.105 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <link name="right_wheel_link">
+    <visual>
+      <origin rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.035" length="0.025"/></geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <origin rpy="1.5708 0 0"/>
+      <geometry><cylinder radius="0.035" length="0.025"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <inertia ixx="3.6e-5" ixy="0" ixz="0" iyy="6.1e-5" iyz="0" izz="3.6e-5"/>
+    </inertial>
+  </link>
+
+  <joint name="right_wheel_joint" type="continuous">
+    <parent link="base_link"/>
+    <child link="right_wheel_link"/>
+    <origin xyz="-0.06 -0.105 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+
+  <!-- ===== Front caster (frictionless ball) ===== -->
+  <link name="caster_link">
+    <visual>
+      <geometry><sphere radius="0.015"/></geometry>
+      <material name="grey"/>
+    </visual>
+    <collision>
+      <geometry><sphere radius="0.015"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.02"/>
+      <inertia ixx="1.8e-6" ixy="0" ixz="0" iyy="1.8e-6" iyz="0" izz="1.8e-6"/>
+    </inertial>
+  </link>
+
+  <joint name="caster_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="caster_link"/>
+    <origin xyz="0.08 0 -0.02"/>
+  </joint>
+
+  <!-- ===== Camera ===== -->
+  <!-- Mast top, front of chassis, pitched down 0.35 rad to see the track and the AprilTag wall. -->
+  <link name="camera_link">
+    <visual>
+      <geometry><box size="0.02 0.05 0.03"/></geometry>
+      <material name="black"/>
+    </visual>
+    <collision>
+      <geometry><box size="0.02 0.05 0.03"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="0.03"/>
+      <inertia ixx="1e-5" ixy="0" ixz="0" iyy="1e-5" iyz="0" izz="1e-5"/>
+    </inertial>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.10 0 0.15" rpy="0 0.35 0"/>
+  </joint>
+
+  <!-- ROS optical frame convention: z forward, x right, y down. -->
+  <link name="camera_optical_link"/>
+
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_optical_link"/>
+    <origin rpy="-1.5708 0 -1.5708"/>
+  </joint>
+
+  <!-- ===== Gazebo (Harmonic) extensions ===== -->
+  <!-- Keep caster_link as its own link. Otherwise the URDF converter merges it
+       into base_link and the zero-friction setting can be lost. -->
+  <gazebo reference="caster_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+
+  <gazebo reference="caster_link">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+
+  <gazebo reference="camera_link">
+    <sensor name="camera" type="camera">
+      <always_on>true</always_on>
+      <update_rate>30</update_rate>
+      <visualize>true</visualize>
+      <topic>camera/image_raw</topic>
+      <gz_frame_id>camera_optical_link</gz_frame_id>
+      <camera>
+        <camera_info_topic>camera/camera_info</camera_info_topic>
+        <horizontal_fov>1.3963</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>10.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+    </sensor>
+  </gazebo>
+
+  <gazebo>
+    <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>0.21</wheel_separation>
+      <wheel_radius>0.035</wheel_radius>
+      <max_linear_acceleration>2.0</max_linear_acceleration>
+      <topic>cmd_vel</topic>
+      <odom_topic>odom</odom_topic>
+      <tf_topic>tf</tf_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_link</child_frame_id>
+      <odom_publish_frequency>30</odom_publish_frequency>
+    </plugin>
+
+    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <topic>joint_states</topic>
+    </plugin>
+  </gazebo>
+
+</robot>

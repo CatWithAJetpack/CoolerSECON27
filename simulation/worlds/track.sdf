@@ -1,0 +1,205 @@
+<?xml version="1.0"?>
+<!--
+  SoutheastCon 2027 Stock Car Race field (approximation).
+  Units: meters. Board top surface is z = 0.
+  Board: 48 x 96 in (1.2192 x 2.4384 m). +y points away from the pit area.
+  Pit area: bottom 28 in (y < -0.508).
+
+  Geometry not given in docs/field.md is a placeholder and marked GUESS.
+  Replace GUESS values once the official field drawing is available.
+-->
+<sdf version="1.9">
+  <world name="track">
+
+    <physics name="1ms" type="ignored">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+    </physics>
+
+    <plugin filename="gz-sim-physics-system" name="gz::sim::systems::Physics"/>
+    <plugin filename="gz-sim-user-commands-system" name="gz::sim::systems::UserCommands"/>
+    <plugin filename="gz-sim-scene-broadcaster-system" name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin filename="gz-sim-sensors-system" name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.8 0.8 0.8 1</background>
+      <shadows>true</shadows>
+    </scene>
+
+    <light type="directional" name="sun">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 5 0 0 0</pose>
+      <diffuse>0.9 0.9 0.9 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <direction>-0.3 0.2 -1</direction>
+    </light>
+
+    <!-- Floor under the board. -->
+    <model name="ground_plane">
+      <static>true</static>
+      <pose>0 0 -0.01826 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><plane><normal>0 0 1</normal><size>10 10</size></plane></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><plane><normal>0 0 1</normal><size>10 10</size></plane></geometry>
+          <material>
+            <ambient>0.5 0.5 0.5 1</ambient>
+            <diffuse>0.5 0.5 0.5 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ===== Field: board, walls, island, center lines ===== -->
+    <model name="field">
+      <static>true</static>
+      <link name="link">
+
+        <!-- Board, 23/32 in thick, painted black (Onyx). -->
+        <collision name="board_collision">
+          <pose>0 0 -0.00913 0 0 0</pose>
+          <geometry><box><size>1.2192 2.4384 0.01826</size></box></geometry>
+        </collision>
+        <visual name="board_visual">
+          <pose>0 0 -0.00913 0 0 0</pose>
+          <geometry><box><size>1.2192 2.4384 0.01826</size></box></geometry>
+          <material>
+            <ambient>0.04 0.04 0.04 1</ambient>
+            <diffuse>0.04 0.04 0.04 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+
+        <!-- Perimeter walls: 1 in wide, 4 in tall, gray (Winter Chill). -->
+        <collision name="wall_north_collision">
+          <pose>0 1.2065 0.0508 0 0 0</pose>
+          <geometry><box><size>1.2192 0.0254 0.1016</size></box></geometry>
+        </collision>
+        <visual name="wall_north_visual">
+          <pose>0 1.2065 0.0508 0 0 0</pose>
+          <geometry><box><size>1.2192 0.0254 0.1016</size></box></geometry>
+          <material><ambient>0.78 0.80 0.82 1</ambient><diffuse>0.78 0.80 0.82 1</diffuse></material>
+        </visual>
+
+        <collision name="wall_south_collision">
+          <pose>0 -1.2065 0.0508 0 0 0</pose>
+          <geometry><box><size>1.2192 0.0254 0.1016</size></box></geometry>
+        </collision>
+        <visual name="wall_south_visual">
+          <pose>0 -1.2065 0.0508 0 0 0</pose>
+          <geometry><box><size>1.2192 0.0254 0.1016</size></box></geometry>
+          <material><ambient>0.78 0.80 0.82 1</ambient><diffuse>0.78 0.80 0.82 1</diffuse></material>
+        </visual>
+
+        <collision name="wall_east_collision">
+          <pose>0.5969 0 0.0508 0 0 0</pose>
+          <geometry><box><size>0.0254 2.4384 0.1016</size></box></geometry>
+        </collision>
+        <visual name="wall_east_visual">
+          <pose>0.5969 0 0.0508 0 0 0</pose>
+          <geometry><box><size>0.0254 2.4384 0.1016</size></box></geometry>
+          <material><ambient>0.78 0.80 0.82 1</ambient><diffuse>0.78 0.80 0.82 1</diffuse></material>
+        </visual>
+
+        <collision name="wall_west_collision">
+          <pose>-0.5969 0 0.0508 0 0 0</pose>
+          <geometry><box><size>0.0254 2.4384 0.1016</size></box></geometry>
+        </collision>
+        <visual name="wall_west_visual">
+          <pose>-0.5969 0 0.0508 0 0 0</pose>
+          <geometry><box><size>0.0254 2.4384 0.1016</size></box></geometry>
+          <material><ambient>0.78 0.80 0.82 1</ambient><diffuse>0.78 0.80 0.82 1</diffuse></material>
+        </visual>
+
+        <!-- Pit divider wall at y = -0.508 (28 in from bottom).
+             GUESS: 24 in center segment, open on both sides for pit entry/exit. -->
+        <collision name="pit_wall_collision">
+          <pose>0 -0.508 0.0508 0 0 0</pose>
+          <geometry><box><size>0.6096 0.0254 0.1016</size></box></geometry>
+        </collision>
+        <visual name="pit_wall_visual">
+          <pose>0 -0.508 0.0508 0 0 0</pose>
+          <geometry><box><size>0.6096 0.0254 0.1016</size></box></geometry>
+          <material><ambient>0.78 0.80 0.82 1</ambient><diffuse>0.78 0.80 0.82 1</diffuse></material>
+        </visual>
+
+        <!-- Inner barrier of the oval.
+             GUESS: 1 x 36 in wall, centered in the racecourse zone.
+             A wider island makes each lane narrower than a 12 in robot. -->
+        <collision name="island_collision">
+          <pose>0 0.349 0.0508 0 0 0</pose>
+          <geometry><box><size>0.0254 0.9144 0.1016</size></box></geometry>
+        </collision>
+        <visual name="island_visual">
+          <pose>0 0.349 0.0508 0 0 0</pose>
+          <geometry><box><size>0.0254 0.9144 0.1016</size></box></geometry>
+          <material><ambient>0.78 0.80 0.82 1</ambient><diffuse>0.78 0.80 0.82 1</diffuse></material>
+        </visual>
+
+        <!-- Lane center lines: 1 x 36 in, white, one per straightaway.
+             Visual only, so the robot does not bump over them. -->
+        <visual name="center_line_east">
+          <pose>0.2985 0.349 0.0005 0 0 0</pose>
+          <geometry><box><size>0.0254 0.9144 0.001</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse><emissive>0.2 0.2 0.2 1</emissive></material>
+        </visual>
+        <visual name="center_line_west">
+          <pose>-0.2985 0.349 0.0005 0 0 0</pose>
+          <geometry><box><size>0.0254 0.9144 0.001</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse><emissive>0.2 0.2 0.2 1</emissive></material>
+        </visual>
+
+        <!-- AprilTag placeholder on the racecourse face of the pit wall.
+             GUESS: location. Tag is family 41h12, 68 mm.
+             TODO: replace the black square with a textured tag41h12 image. -->
+        <visual name="apriltag_border">
+          <pose>0 -0.4943 0.0508 0 0 0</pose>
+          <geometry><box><size>0.09 0.002 0.09</size></box></geometry>
+          <material><ambient>1 1 1 1</ambient><diffuse>1 1 1 1</diffuse></material>
+        </visual>
+        <visual name="apriltag_placeholder">
+          <pose>0 -0.4932 0.0508 0 0 0</pose>
+          <geometry><box><size>0.068 0.001 0.068</size></box></geometry>
+          <material><ambient>0 0 0 1</ambient><diffuse>0 0 0 1</diffuse></material>
+        </visual>
+
+      </link>
+    </model>
+
+    <!-- ===== Obstacle cars: one per lane, each on a straightaway ===== -->
+    <!-- GUESS: size and position. Move per match to test randomization. -->
+    <model name="obstacle_outer">
+      <static>true</static>
+      <pose>0.4413 0.55 0.04 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.10 0.18 0.08</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.10 0.18 0.08</size></box></geometry>
+          <material><ambient>0.8 0.1 0.1 1</ambient><diffuse>0.8 0.1 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="obstacle_inner">
+      <static>true</static>
+      <pose>-0.1556 0.20 0.04 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>0.10 0.18 0.08</size></box></geometry>
+        </collision>
+        <visual name="visual">
+          <geometry><box><size>0.10 0.18 0.08</size></box></geometry>
+          <material><ambient>0.9 0.6 0.1 1</ambient><diffuse>0.9 0.6 0.1 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
